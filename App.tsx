@@ -70,100 +70,103 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    initializeMQTT();
-
-    // 클라이언트 생성 및 옵션 설정
-    const client = new Paho.MQTT.Client('ws://14.50.159.2:1884/', 'client2');
-
-    // 연결 로스트 시 처리
-    client.onConnectionLost = (error: { errorCode: number, errorMessage: string,invocationContext:string }) => {
-      if (error.errorCode !== 0) {
-        console.log('onConnectionLost:' + error.errorMessage);
-        if (error.errorCode ===7){
-          console.log("Need Wifi or Cellular activated")
+    if (user?.idToken) {
+      initializeMQTT();
+  
+      // 클라이언트 생성 및 옵션 설정
+      const client = new Paho.MQTT.Client('ws://14.50.159.2:1884/', 'client2');
+  
+      // 연결 로스트 시 처리
+      client.onConnectionLost = (error: { errorCode: number, errorMessage: string, invocationContext: string }) => {
+        if (error.errorCode !== 0) {
+          console.log('onConnectionLost:' + error.errorMessage);
+          if (error.errorCode === 7) {
+            console.log("Need Wifi or Cellular activated")
+          }
+          reconnect(client);  // 연결 실패 시 재연결 시도
         }
-        reconnect(client);  // 연결 실패 시 재연결 시도
-      }
-    };
-
-    const reconnect = (client: { connect: (arg0: { onSuccess: () => void; onFailure: (reconnectError: any) => void; useSSL: boolean; }) => void; subscribe: (arg0: string) => void; }) => {
-      setTimeout(() => {
-        console.log("Attempting to reconnect...");
-        client.connect({
-          onSuccess: () => {
-            console.log('Reconnected successfully.');
-            console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
-            client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
-          },
-          onFailure: reconnectError => {
-            console.log('Reconnection failed:', reconnectError.errorMessage);
-            reconnect(client);  // 재귀적으로 재연결 시도
-          },
-          useSSL: false
-        });
-      }, 2000);  // 2초 후에 재연결 시도
-    };
-
-    // 메시지 수신 시 처리
-    client.onMessageArrived = (message) => {
-      const newDeviceData = JSON.parse(message.payloadString); // 메시지가 객체라고 가정
-      const devEui = newDeviceData.dev_eui;
-      console.log(newDeviceData);
-    
-      // Set device coordinates
-      const parsedString = newDeviceData.parsed_string;
-      let deviceCoord = newDeviceData.deviceCoord;
-    
-      // 좌표가 0이 아닌 경우에만 업데이트
-      if (parseFloat(parsedString.LATITUDE) !== 0 && parseFloat(parsedString.LONGITUDE) !== 0) {
-        deviceCoord = {
-          latitude: parseFloat(parsedString.LATITUDE),
-          longitude: parseFloat(parsedString.LONGITUDE),
-        };
-      }
-    
-      const updatedDeviceData = {
-        ...newDeviceData,
-        deviceCoord, // 좌표가 0이 아닌 경우에만 업데이트
       };
-    
-      const existingDeviceIndex = fetchedWData.findIndex(device => device.dev_eui === devEui);
-    
-      if (existingDeviceIndex !== -1) {
-        // 기존 dev_eui가 있는 경우 최신화
-        const updatedDeviceList = [...fetchedWData];
-        updatedDeviceList[existingDeviceIndex] = updatedDeviceData;
-        dispatch(setFetchedWData(updatedDeviceList));
-      } else {
-        // 새로운 dev_eui가 있는 경우 리스트에 추가
-        dispatch(setFetchedWData([...fetchedWData, updatedDeviceData]));
-      }
-    };
-    
-
-    // MQTT 서버에 연결
-    client.connect({ 
-      onSuccess: () => {
-        console.log('Connected');
-        console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
-        client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
-      },
-      useSSL: false,
-      onFailure: (error:{errorCode:number,errorMessage:string,invocationContext:string}) => {
-        console.log('Connection failed:', error.errorMessage);
-        if (error.errorCode ===7){
-          console.log("Need Wifi or Cellular activated")
+  
+      const reconnect = (client: { connect: (arg0: { onSuccess: () => void; onFailure: (reconnectError: any) => void; useSSL: boolean; }) => void; subscribe: (arg0: string) => void; }) => {
+        setTimeout(() => {
+          console.log("Attempting to reconnect...");
+          client.connect({
+            onSuccess: () => {
+              console.log('Reconnected successfully.');
+              console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
+              client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
+            },
+            onFailure: reconnectError => {
+              console.log('Reconnection failed:', reconnectError.errorMessage);
+              reconnect(client);  // 재귀적으로 재연결 시도
+            },
+            useSSL: false
+          });
+        }, 2000);  // 2초 후에 재연결 시도
+      };
+  
+      // 메시지 수신 시 처리
+      client.onMessageArrived = (message) => {
+        const newDeviceData = JSON.parse(message.payloadString); // 메시지가 객체라고 가정
+        const devEui = newDeviceData.dev_eui;
+        console.log(devEui);
+        console.log(newDeviceData);
+  
+        // Set device coordinates
+        const parsedString = newDeviceData.parsed_string;
+        let deviceCoord;
+  
+        // 좌표가 0이 아닌 경우에만 업데이트
+        if (parseFloat(parsedString.LATITUDE) !== 0 && parseFloat(parsedString.LONGITUDE) !== 0) {
+          deviceCoord = {
+            latitude: parseFloat(parsedString.LATITUDE),
+            longitude: parseFloat(parsedString.LONGITUDE),
+          };
+          const updatedDeviceData = {
+            ...newDeviceData,
+            deviceCoord, // 좌표가 0이 아닌 경우에만 업데이트
+          };
+  
+          const existingDeviceIndex = fetchedWData.findIndex(device => device.dev_eui === devEui);
+          console.log("EXIST?");
+          console.log(existingDeviceIndex)
+  
+          if (existingDeviceIndex !== -1) {
+            // 기존 dev_eui가 있는 경우 최신화
+            const updatedDeviceList = [...fetchedWData];
+            updatedDeviceList[existingDeviceIndex] = updatedDeviceData;
+            dispatch(setFetchedWData(updatedDeviceList));
+          } else {
+            // 새로운 dev_eui가 있는 경우 리스트에 추가
+            dispatch(setFetchedWData([...fetchedWData, updatedDeviceData]));
+          }
         }
-        reconnect(client);  // 연결 실패 시 재연결 시도
-      }
-    });
-
-    return () => {
-      if (client.isConnected()) {
-        client.disconnect();
-      }
-    };
-  }, []);
+      };
+  
+      // MQTT 서버에 연결
+      client.connect({
+        onSuccess: () => {
+          console.log('Connected');
+          console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
+          client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
+        },
+        useSSL: false,
+        onFailure: (error: { errorCode: number, errorMessage: string, invocationContext: string }) => {
+          console.log('Connection failed:', error.errorMessage);
+          if (error.errorCode === 7) {
+            console.log("Need Wifi or Cellular activated")
+          }
+          reconnect(client);  // 연결 실패 시 재연결 시도
+        }
+      });
+  
+      return () => {
+        if (client.isConnected()) {
+          client.disconnect();
+        }
+      };
+    }
+  }, [user]); // user 값이 변경될 때만 실행
 
   // wifi 와 cellular on off 감지
   useEffect(() => {

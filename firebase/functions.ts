@@ -78,9 +78,11 @@ export const handleSignIn = async (dispatch: AppDispatch) => {
     }
 
     if (signedInUser) {
-      dispatch(setUser(signedInUser));
       await AsyncStorage.setItem('user', JSON.stringify(signedInUser));
       await updateFirebaseStorage(signedInUser, dispatch);
+      console.log('SignIn Success');
+      console.log(signedInUser.user.email)
+      dispatch(setUser(signedInUser));
     }
   } catch (err) {
     console.log(err);
@@ -94,6 +96,7 @@ export const handleSignOut = async (dispatch: AppDispatch) => {
     dispatch(setUser(default_user));
     dispatch(setActiveTab('Map'));
     await AsyncStorage.removeItem('user');
+    console.log('SignOut Success');
   } catch (error) {
     console.error(error);
   }

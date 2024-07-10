@@ -47,7 +47,7 @@ const MapComponent = () => {
                 if (lastTouchTime && Date.now() - lastTouchTime < 3500) {
                     return;
                 }
-                if (1){
+                if (0){
 
                 }else {
                     mapView.current?.animateToCoordinate({ latitude, longitude });
@@ -236,7 +236,6 @@ const MapComponent = () => {
                     height={35}
                     anchor={{ x: 0.5, y: 0.5 }}
                     onClick={() => handleDeviceClick(device.dev_eui)} // 마커 클릭 핸들러 추가
-                    onLongPress={() => handleDeviceLongPress(device)}
                 >
                 <MaterialCommunityIcons 
                     key={`deviceI_${i}`} 
@@ -338,11 +337,7 @@ const MapComponent = () => {
                 {seeDistanceLines && distanceLines}
                 
             </NaverMapView>
-            <DeviceDetailModal 
-                visible={isModalVisible} 
-                device={selectedDevice} 
-                onClose={() => setIsModalVisible(false)} 
-            />
+            
             <View style={styles.upperContainer}>
                 <View style={styles.networkState}>
                     <View style={{...styles.networkState1, backgroundColor:wifiOn?Theme.COLORS.NETWORK_STATUS_ON:Theme.COLORS.NETWORK_STATUS_OFF}}>
@@ -365,6 +360,24 @@ const MapComponent = () => {
                     )
                 }
             </View>
+            {
+                (showDeviceId) && (
+                    <>
+                        <TouchableOpacity style={{flex:1, backgroundColor:'white', opacity:1, zIndex:999}}>
+                            <MaterialCommunityIcons 
+                                name="panorama-sphere" 
+                                size={35} 
+                                color={Theme.COLORS.SETINGS_BTN} 
+                            />    
+                        </TouchableOpacity>
+                        <DeviceDetailModal 
+                            visible={isModalVisible} 
+                            device={selectedDevice} 
+                            onClose={() => setIsModalVisible(false)} 
+                        />
+                    </>
+                )
+            }
             
             <ActionButton 
                 buttonColor={Theme.COLORS.SETINGS_BTN}>

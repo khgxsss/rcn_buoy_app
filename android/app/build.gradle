@@ -110,7 +110,7 @@ dependencies {
     implementation("com.facebook.react:react-android")
     implementation project(':react-native-vector-icons')
 
-    // ���̹� ���� SDK
+    // naver map SDK
     implementation 'com.naver.maps:map-sdk:3.17.0'
     // Import the Firebase BoMa
     implementation platform('com.google.firebase:firebase-bom:33.1.1')

@@ -92,7 +92,7 @@ const App: React.FC = () => {
         client.connect({
           onSuccess: () => {
             console.log('Reconnected successfully.');
-            console.log(user?.user.email)
+            console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
             client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
           },
           onFailure: reconnectError => {
@@ -145,7 +145,7 @@ const App: React.FC = () => {
     client.connect({ 
       onSuccess: () => {
         console.log('Connected');
-        console.log(user?.user.email)
+        console.log(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`)
         client.subscribe(`v3/rcnapp1@ttn/devices/${user?.user.id}/up`);
       },
       useSSL: false,

@@ -107,16 +107,13 @@ const App: React.FC = () => {
   
       // 메시지 수신 시 처리
       client.onMessageArrived = (message) => {
-        const newDeviceData = JSON.parse(message.payloadString); // 메시지가 객체라고 가정
+        const newDeviceData = JSON.parse(message.payloadString);
         const devEui = newDeviceData.dev_eui;
         console.log(devEui);
-        console.log(newDeviceData);
   
-        // Set device coordinates
         const parsedString = newDeviceData.parsed_string;
         let deviceCoord;
   
-        // 좌표가 0이 아닌 경우에만 업데이트
         if (parseFloat(parsedString.LATITUDE) !== 0 && parseFloat(parsedString.LONGITUDE) !== 0) {
           deviceCoord = {
             latitude: parseFloat(parsedString.LATITUDE),
@@ -124,24 +121,28 @@ const App: React.FC = () => {
           };
           const updatedDeviceData = {
             ...newDeviceData,
-            deviceCoord, // 좌표가 0이 아닌 경우에만 업데이트
+            deviceCoord,
           };
   
-          const existingDeviceIndex = fetchedWData.findIndex(device => device.dev_eui === devEui);
-          console.log("EXIST?");
-          console.log(existingDeviceIndex)
+          dispatch((dispatch, getState) => {
+            const fetchedWData = getState().auth.fetchedWData;
+            const existingDeviceIndex = fetchedWData.findIndex(device => device.dev_eui === devEui);
+            console.log("EXIST?");
+            console.log(existingDeviceIndex);
   
-          if (existingDeviceIndex !== -1) {
-            // 기존 dev_eui가 있는 경우 최신화
-            const updatedDeviceList = [...fetchedWData];
-            updatedDeviceList[existingDeviceIndex] = updatedDeviceData;
+            let updatedDeviceList;
+            if (existingDeviceIndex !== -1) {
+              updatedDeviceList = [...fetchedWData];
+              updatedDeviceList[existingDeviceIndex] = updatedDeviceData;
+            } else {
+              updatedDeviceList = [...fetchedWData, updatedDeviceData];
+            }
+  
             dispatch(setFetchedWData(updatedDeviceList));
-          } else {
-            // 새로운 dev_eui가 있는 경우 리스트에 추가
-            dispatch(setFetchedWData([...fetchedWData, updatedDeviceData]));
-          }
+          });
         }
       };
+  
   
       // MQTT 서버에 연결
       client.connect({

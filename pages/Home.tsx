@@ -17,7 +17,7 @@ import { RootState } from '../redux/store';
 const buoyOnImagePath = require('../assets/img/buoy.png');
 
 const Home: React.FC = () => {
-  const deviceData = useSelector((state: RootState) => state.device.deviceData);
+  const fetchedWData = useSelector((state: RootState) => state.auth.fetchedWData);
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     // backgroundColor: isDarkMode ? "#000000" : "#ffffff",
@@ -25,11 +25,6 @@ const Home: React.FC = () => {
     flex:1
   };
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  
-  const deviceArray = Object.keys(deviceData).map(key => ({
-    key_rid: key,
-    ...deviceData[key],
-  }));
 
   // useWindowDimensions 훅을 사용하여 화면 크기 가져오기
   const { width, height } = useWindowDimensions();
@@ -51,9 +46,9 @@ const Home: React.FC = () => {
         style={[styles.buoyImage, { width: imageSize.width, height: imageSize.height }]}
         resizeMode="contain"
       />
-      <Text style={[styles.deviceIdText, { zIndex: 1 }]}>{item.macAddr.substring(8)}</Text>
-      <Text style={[styles.deviceText, { zIndex: 1 }]}>Last TimeStamp: {item.time}</Text>
-      <Text style={[styles.dataText, { zIndex: 1 }]}>Data: {item.data}</Text>
+      <Text style={[styles.deviceIdText, { zIndex: 1 }]}>{item.dev_eui.substring(12)}</Text>
+      <Text style={[styles.deviceText, { zIndex: 1 }]}>{item.received_at}</Text>
+      <Text style={[styles.dataText, { zIndex: 1 }]}>{'<Location>\n'}{`${item.parsed_string.LATITUDE}\n${item.parsed_string.LONGITUDE}`}</Text>
     </View>
   );
 
@@ -61,9 +56,9 @@ const Home: React.FC = () => {
     <SafeAreaView style={backgroundStyle}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={backgroundStyle.backgroundColor} />
       <FlatList
-        data={deviceArray}
+        data={fetchedWData}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.dev_eui}
         key={flatListKey}
         numColumns={numColumns}
         contentContainerStyle={styles.listContentContainer}
@@ -84,13 +79,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   deviceIdText: {
-    fontSize: 18,
+    fontSize: 24,
     color: '#333333',
     fontWeight: 'bold',
     marginBottom: 8,
     zIndex: 1, // 이미지를 덮어쓰도록 설정
     position: 'absolute', // 위치를 절대적으로 설정
-    top: 10, // 이미지 상단에서부터의 간격
+    top: 10, // 이미지 상단에서부터의 간격,
+    backgroundColor:'#f0f0f0',
+    opacity: 0.7
   },
   deviceText: {
     color: '#333333',
@@ -98,7 +95,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
     fontWeight: 'bold',
     position: 'absolute',
-    fontSize: 10
+    fontSize: 14,
+    backgroundColor:'#f0f0f0',
+    opacity: 0.7
   },
   dataText: {
     color: '#333333',
@@ -107,7 +106,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     position: 'absolute',
     bottom: 10, // 이미지 하단에서부터의 간격
-    fontSize: 8
+    fontSize: 14,
+    backgroundColor:'#f0f0f0',
+    opacity: 0.7
   },
   buoyImage: {
     position: 'absolute', // 배경에 이미지가 깔리도록 설정

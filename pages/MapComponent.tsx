@@ -126,10 +126,16 @@ const MapComponent = () => {
         }
     };
 
-    const handleDeviceLongPress = (device: DeviceDataType) => {
-        setSelectedDevice(device);
-        setIsModalVisible(true);
+    const handleDeviceDetail = () => {
+        const device = fetchedWData.find(device => device.dev_eui === showDeviceId);
+        if (device) {
+            setSelectedDevice(device);
+            setIsModalVisible(true);
+        } else {
+            console.log(`Device with ID ${showDeviceId} not found.`);
+        }
     };
+    
 
     const handleOnCameraChange = (cameraChangeEvent: Region) => {
         // 사용자가 지도를 터치할 때마다 현재 시간을 저장한다.
@@ -231,18 +237,18 @@ const MapComponent = () => {
                     key={`deviceM_${i}`} 
                     hidden={false}
                     coordinate={deviceCoord}
-                    caption={!seeAllDevices ? showDeviceId === device.dev_eui? {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'} : {} : {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'}}
+                    caption={!seeAllDevices ? selectedDevice?.dev_eui === device.dev_eui? {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'} : {} : {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'}}
                     width={35}
                     height={35}
                     anchor={{ x: 0.5, y: 0.5 }}
-                    onClick={() => handleDeviceClick(device.dev_eui)} // 마커 클릭 핸들러 추가
+                    onClick={() => setSelectedDevice(device)} // 마커 클릭 핸들러 추가
                 >
-                <MaterialCommunityIcons 
+                <MaterialCommunityIcons
                     key={`deviceI_${i}`} 
                     name="panorama-sphere" 
                     size={35} 
                     color={deviceOn ? Theme.COLORS.DEVICE_ON : Theme.COLORS.DEVICE_OFF} 
-                />    
+                />
                 </Marker>
             )
         });
@@ -272,12 +278,12 @@ const MapComponent = () => {
         );
     };
 
-    const handleDeviceClick = (deviceId: string) => {
+    const handleDeviceClick = (device) => {
         // 이미 표시된 buoy_id를 클릭하면 숨기고, 그렇지 않으면 표시합니다.
-        if (showDeviceId === deviceId) {
+        if (selectedDevice === device) {
             setShowDeviceId(null);
         } else {
-            setShowDeviceId(deviceId);
+            setShowDeviceId(device.dev_eui);
         }
     }
 
@@ -359,25 +365,27 @@ const MapComponent = () => {
                         </TouchableOpacity>
                     )
                 }
+                
             </View>
+
             {
                 (showDeviceId) && (
-                    <>
-                        <TouchableOpacity style={{flex:1, backgroundColor:'white', opacity:1, zIndex:999}}>
-                            <MaterialCommunityIcons 
-                                name="panorama-sphere" 
-                                size={35} 
-                                color={Theme.COLORS.SETINGS_BTN} 
-                            />    
-                        </TouchableOpacity>
-                        <DeviceDetailModal 
-                            visible={isModalVisible} 
-                            device={selectedDevice} 
-                            onClose={() => setIsModalVisible(false)} 
-                        />
-                    </>
+                    <TouchableOpacity onPress={handleDeviceDetail} style={{position:'absolute', bottom:'60%', right: '3%'}}>
+                        <MaterialCommunityIcons 
+                            name="more" 
+                            size={50} 
+                            color={Theme.COLORS.PRIMARY} 
+                        />    
+                    </TouchableOpacity>
                 )
             }
+
+            <DeviceDetailModal
+                visible={isModalVisible} 
+                device={selectedDevice} 
+                onClose={() => setIsModalVisible(false)} 
+            />
+            
             
             <ActionButton 
                 buttonColor={Theme.COLORS.SETINGS_BTN}>

@@ -8,7 +8,7 @@ import IntentLauncher from 'react-native-intent-launcher-fork1';
 import { useDispatch } from 'react-redux';
 import { setLocationSaved, setMapSettingsModalVisible, setMapType } from '../redux/stateSlice';
 import Theme from '../constants/Theme';
-import { calculateDistance, hexToRgb } from '../utils/utilfuncs';
+import { calculateDistance, convertToSeoulTime, hexToRgb } from '../utils/utilfuncs';
 import MapSettingsModalComponent from '../components/mapSettingsModal';
 import { DeviceDataType, Region } from '../constants/types';
 import { useSelector } from 'react-redux';
@@ -232,7 +232,7 @@ const MapComponent = () => {
                     key={`deviceM_${i}`} 
                     hidden={false}
                     coordinate={deviceCoord}
-                    caption={!seeAllDevices ? selectedDevice?.dev_eui === device.dev_eui? {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'} : {} : {'text':device.dev_eui, 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'}}
+                    caption={!seeAllDevices ? selectedDevice?.dev_eui === device.dev_eui? {'text':(device.dev_eui).substring(12), 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'} : {} : {'text':(device.dev_eui).substring(12), 'textSize':12, 'color':'#fffb00', 'haloColor':'#000'}}
                     width={35}
                     height={35}
                     anchor={{ x: 0.5, y: 0.5 }}
@@ -252,22 +252,19 @@ const MapComponent = () => {
     const DeviceDetailModal = () => {
         if (!selectedDevice) return null;
         return (
-            <Modal
-                transparent={true}
-                animationType="slide"
-            >
-                <View style={styles.modalContainer}>
+            <View style={styles.overlayContainer}>
+                <View style={styles.overlayContent}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>{selectedDevice.dev_eui}</Text>
                         <Text style={styles.modalDetail}>Latitude: {selectedDevice.parsed_string.LATITUDE}</Text>
                         <Text style={styles.modalDetail}>Longitude: {selectedDevice.parsed_string.LONGITUDE}</Text>
-                        <Text style={styles.modalDetail}>Received at: {selectedDevice.received_at}</Text>
+                        <Text style={styles.modalDetail}>Received at: {convertToSeoulTime(selectedDevice.received_at)}</Text>
                         <TouchableOpacity onPress={()=>setIsModalVisible(false)} style={styles.closeButton}>
                             <Text>Close</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
+            </View>
         );
     };
 
@@ -515,11 +512,21 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: 'black',
     },
-    modalContainer: {
-        flex: 1,
+    overlayContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    overlayContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
     },
     modalContent: {
         width: '90%',
@@ -543,7 +550,7 @@ const styles = StyleSheet.create({
     closeButton: {
         marginTop: 20,
         padding: 10,
-        backgroundColor: '#DDDDDD',
+        backgroundColor: Theme.COLORS.BLACK,
         borderRadius: 5,
     },
 });

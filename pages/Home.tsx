@@ -1,28 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import {
-  SafeAreaView,
-  StatusBar,
+  FlatList, Image, SafeAreaView,
   StyleSheet,
   Text,
-  useColorScheme,
-  View,
-  Image,
-  FlatList,
-  Dimensions,
   useWindowDimensions // Dimensions API 임포트
+  , View
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
+import { convertToSeoulTime } from '../utils/utilfuncs';
 
 const buoyOnImagePath = require('../assets/img/buoy.png');
 
 const Home: React.FC = () => {
   const fetchedWData = useSelector((state: RootState) => state.auth.fetchedWData);
-  const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     // backgroundColor: isDarkMode ? "#000000" : "#ffffff",
-    backgroundColor: "#ffffff",
-    flex:1
+    backgroundColor: "#ffffff"
   };
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
@@ -47,14 +41,13 @@ const Home: React.FC = () => {
         resizeMode="contain"
       />
       <Text style={[styles.deviceIdText, { zIndex: 1 }]}>{item.dev_eui.substring(12)}</Text>
-      <Text style={[styles.deviceText, { zIndex: 1 }]}>{item.received_at}</Text>
+      <Text style={[styles.deviceText, { zIndex: 1 }]}>{convertToSeoulTime(item.received_at)}</Text>
       <Text style={[styles.dataText, { zIndex: 1 }]}>{'<Location>\n'}{`${item.parsed_string.LATITUDE}\n${item.parsed_string.LONGITUDE}`}</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={backgroundStyle.backgroundColor} />
       <FlatList
         data={fetchedWData}
         renderItem={renderItem}

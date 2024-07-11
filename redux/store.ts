@@ -1,11 +1,9 @@
 // src/app/store.ts
 import { configureStore } from '@reduxjs/toolkit';
-import deviceReducer from './deviceSlice';
 import authReducer from './stateSlice'
 
 export const store = configureStore({
   reducer: {
-    device: deviceReducer,
     auth: authReducer,
   },
 });

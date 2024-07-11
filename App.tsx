@@ -4,12 +4,8 @@ import {
   Linking,
   Modal,
   Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
   LogBox
 } from 'react-native';
@@ -21,7 +17,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from './pages/Home';
 // import ViewHistory from './pages/ViewHistory';
 import { useDispatch, useSelector } from 'react-redux';
-import { setDeviceData } from './redux/deviceSlice';
 import { setCellularOn, setFetchedWData, setUser, setWifiOn } from './redux/stateSlice';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MapComponent from './pages/MapComponent';
@@ -32,6 +27,7 @@ import IntentLauncher from 'react-native-intent-launcher-fork1';
 import Theme from './constants/Theme';
 import LoginComponent from './pages/Login';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import ViewHistory from './pages/ViewHistory';
 
 LogBox.ignoreLogs([
   /.*defaultProps.*function components/
@@ -251,10 +247,14 @@ const App: React.FC = () => {
       </Modal>
       <LoginComponent/>
       <NavigationContainer>
-        <Tab.Navigator>
-          <Tab.Screen name="Device" component={Home} options={{
+        <Tab.Navigator initialRouteName='Map' screenOptions={()=>({
+          tabBarActiveTintColor:Theme.COLORS.GRADIENT_END,
+          headerTitleStyle: {color:'#ffffff'},
+          headerStyle:{backgroundColor:Theme.COLORS.GRADIENT_START}
+        })}>
+          <Tab.Screen name="Live Devices" component={Home} options={{
               tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="home" color={color} size={size} />
+                <MaterialIcons name="list" color={color} size={size} />
               ),
             }}/>
           <Tab.Screen name="Map" component={MapComponent} options={{
@@ -262,11 +262,11 @@ const App: React.FC = () => {
               <MaterialIcons name="map" color={color} size={size} />
             ),
           }}/>
-          {/* <Tab.Screen name="View History" component={ViewHistory} options={{
+          <Tab.Screen name="View History" component={ViewHistory} options={{
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="history" color={color} size={size} />
             ),
-          }}/> */}
+          }}/>
         </Tab.Navigator>
       </NavigationContainer>
     </>

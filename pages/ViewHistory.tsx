@@ -1,40 +1,60 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, TextInput, Button, StyleSheet, View, Modal, Dimensions, FlatList } from 'react-native';
+import { ScrollView, Text, TextInput, Button, StyleSheet, View, Modal, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import DatePicker from 'react-native-date-picker';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import { getSeoulDate } from '../utils/utilfuncs';
+import Theme from '../constants/Theme';
 
 interface Record {
-  timestamp: string;
-  device_status: 'on' | 'off';
+  created_at: string;
+  parsed_string: {
+    [key: string]: string | number;
+  };
 }
 
 const ViewHistory: React.FC = () => {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [deviceId, setDeviceId] = useState<string>('a6');
-  const [userId, setUserId] = useState<string>('testuser1');
-  const [table, setTable] = useState<string>('devices_all');
+  const [startDate, setStartDate] = useState<Date>(getSeoulDate());
+  const [endDate, setEndDate] = useState<Date>(getSeoulDate());
+  const [deviceEui, setDeviceEui] = useState<string>('');
   const [records, setRecords] = useState<Record[]>([]);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
+  const [deviceListModalVisible, setDeviceListModalVisible] = useState<boolean>(false);
+  const [deviceEuiList, setDeviceEuiList] = useState<string[]>([]);
+
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const fetchRecords = async () => {
-    const startOfDay = new Date(startDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(endDate);
-    endOfDay.setHours(23, 59, 59, 999);
-    endOfDay.setDate(endOfDay.getDate() + 1); // 종료 날짜에 하루 추가
-
     try {
-      const response = await axios.get('http://14.50.159.2:19999/dbcall', {
+      if (deviceEui){
+        const response = await axios.get('http://14.50.159.2:9987/get_device_data', {
+          params: {
+            owner_uid: user?.user.id,
+            device_eui: deviceEui,
+            start_datetime: startDate,
+            end_datetime: endDate
+          },
+        });
+        setRecords(response.data);
+        setModalVisible(true); // Show the modal
+      }else {
+        console.log("check device")
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchDeviceEuiList = async () => {
+    try {
+      const response = await axios.get('http://14.50.159.2:9987/get_user_devices', {
         params: {
-          table: table,
-          period: `${startOfDay.toISOString().split('T')[0]}to${endOfDay.toISOString().split('T')[0]}`,
-          device_id: deviceId,
-          user_id: userId,
+          owner_uid: user?.user.id,
         },
       });
-      setRecords(response.data);
-      setModalVisible(true); // Show the modal
+      setDeviceEuiList(response.data.map((device: { dev_eui: string }) => device.dev_eui));
+      setDeviceListModalVisible(true); // Show the device list modal
     } catch (error) {
       console.error(error);
     }
@@ -42,40 +62,21 @@ const ViewHistory: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Select date and device id</Text>
-      
+      <Text style={styles.header}>Select date and device EUI</Text>
+
       <Text style={styles.label}>Start Date:</Text>
-      <DatePicker date={startDate} onDateChange={setStartDate} mode="date" />
-      
+      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={startDate} onDateChange={setStartDate} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
       <Text style={styles.label}>End Date:</Text>
-      <DatePicker date={endDate} onDateChange={setEndDate} mode="date"/>
-      
-      <Text style={styles.label}>Device ID:</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setDeviceId}
-        value={deviceId}
-        placeholder="Enter Device ID"
-      />
-      
-      <Text style={styles.label}>User ID:</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setUserId}
-        value={userId}
-        placeholder="Enter User ID"
-      />
-      
-      <Text style={styles.label}>Table:</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setTable}
-        value={table}
-        placeholder="devices or devices_all"
-      />
-      
-      <Button title="Fetch History" onPress={fetchRecords}/>
-      <View style={{marginBottom:30}}></View>
+      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={endDate} onDateChange={setEndDate} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
+
+      <Text style={styles.label}>Device 선택</Text>
+      <View style={styles.row}>
+        <Text style={styles.input}>{deviceEui}</Text>
+        <Button title="찾아보기" onPress={fetchDeviceEuiList} color={Theme.COLORS.BUTTON_COLOR}/>
+      </View>
+
+      <Button title="Fetch History" onPress={fetchRecords} color={Theme.COLORS.PRIMARY}/>
+
       <Modal visible={isModalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Device Usage History</Text>
@@ -84,15 +85,33 @@ const ViewHistory: React.FC = () => {
             keyExtractor={(item, index) => `record-${index}`}
             renderItem={({ item }) => (
               <View style={styles.recordRow}>
-                <Text style={styles.recordCell}>{item.device_id}</Text>
-                <Text style={styles.recordCell}>{item.user_id}</Text>
-                <Text style={styles.recordCell}>{item.last_updated}</Text>
-                <Text style={styles.recordCell}>{item.device_status.toUpperCase()}</Text>
-                <Text style={styles.recordCell}>{item.power}</Text>
+                <Text style={styles.recordCell}>{item.created_at}</Text>
+                <Text style={styles.recordCell}>{item.parsed_string.LATITUDE}, {item.parsed_string.LONGITUDE}</Text>
               </View>
             )}
           />
-          <Button title="Close" onPress={() => setModalVisible(false)} />
+          <Button title="Close" onPress={() => setModalVisible(false)} color={Theme.COLORS.LABEL}/>
+        </View>
+      </Modal>
+
+      <Modal visible={deviceListModalVisible} animationType="slide" onRequestClose={() => setDeviceListModalVisible(false)}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Select Device EUI</Text>
+          <FlatList
+            data={deviceEuiList}
+            keyExtractor={(item, index) => `device-${index}`}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => {
+                setDeviceEui(item);
+                setDeviceListModalVisible(false);
+              }}>
+                <View style={styles.deviceRow}>
+                  <Text style={styles.deviceCell}>{item}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+          <Button title="Close" onPress={() => setDeviceListModalVisible(false)} color={Theme.COLORS.LABEL}/>
         </View>
       </Modal>
     </ScrollView>
@@ -102,18 +121,21 @@ const ViewHistory: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 30,
     paddingLeft: 30,
     paddingRight: 30,
     paddingBottom: 30,
+    backgroundColor: Theme.COLORS.BLACK
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: Theme.COLORS.WHITE
   },
   label: {
     fontSize: 18,
-    marginTop: 20,
+    marginTop: 10,
+    color: Theme.COLORS.WHITE
   },
   input: {
     borderWidth: 1,
@@ -121,21 +143,29 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 10,
     marginBottom: 20,
-    width: '100%',
+    marginRight: 10,
+    width: '70%',
+    color: Theme.COLORS.WHITE
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   modalContent: {
     flex: 1,
     paddingTop: 20,
+    backgroundColor:Theme.COLORS.BLACK
   },
-  flatlist : {
+  flatlist: {
     flex: 1,
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
   modalTitle: {
     fontSize: 20,
     textAlign: 'center',
     marginBottom: 10,
+    color: Theme.COLORS.WHITE
   },
   recordRow: {
     flexDirection: 'row',
@@ -146,7 +176,20 @@ const styles = StyleSheet.create({
   recordCell: {
     flex: 1,
     textAlign: 'center',
+    color: Theme.COLORS.WHITE
+  },
+  deviceRow: {
+    flexDirection: 'row',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  deviceCell: {
+    flex: 1,
+    textAlign: 'center',
+    color: Theme.COLORS.WHITE
   },
 });
+
 
 export default ViewHistory;

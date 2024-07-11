@@ -31,6 +31,31 @@ export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2
     return d;
 };
 
+export const getSeoulDate = () => {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const seoulTime = new Date(utc + (9 * 3600000));
+    return seoulTime;
+};
+
+export const convertToSeoulTime = (utcDate) => {
+    // UTC 시간 문자열을 Date 객체로 변환합니다.
+    const date = new Date(utcDate);
+  
+    // 서울 시간대로 변환합니다. (UTC+9)
+    const seoulTime = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  
+    // 원하는 형식으로 변환합니다. 예: 'YYYY-MM-DD HH:mm:ss'
+    const year = seoulTime.getFullYear();
+    const month = String(seoulTime.getMonth() + 1).padStart(2, '0');
+    const day = String(seoulTime.getDate()).padStart(2, '0');
+    const hours = String(seoulTime.getHours()).padStart(2, '0');
+    const minutes = String(seoulTime.getMinutes()).padStart(2, '0');
+    const seconds = String(seoulTime.getSeconds()).padStart(2, '0');
+  
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
 interface Options {
     body?: any;
     headers?: Record<string, string>;

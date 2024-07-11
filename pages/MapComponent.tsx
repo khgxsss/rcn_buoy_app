@@ -20,7 +20,7 @@ const MapComponent = () => {
     const [region, setRegion] = useState<Region>({"contentRegion": [{"latitude": 36.43313265533338, "longitude": 127.40861266544789}, {"latitude": 36.44320541782096, "longitude": 127.40861266544789}, {"latitude": 36.44320541782096, "longitude": 127.41719573454998}, {"latitude": 36.43313265533338, "longitude": 127.41719573454998}, {"latitude": 36.43313265533338, "longitude": 127.40861266544789}], "coveringRegion": [{"latitude": 36.43313265533338, "longitude": 127.40861266544789}, {"latitude": 36.44320541782096, "longitude": 127.40861266544789}, {"latitude": 36.44320541782096, "longitude": 127.41719573454998}, {"latitude": 36.43313265533338, "longitude": 127.41719573454998}, {"latitude": 36.43313265533338, "longitude": 127.40861266544789}], "latitude": 36.43816920000003, "longitude": 127.41290420000009, "zoom": 16});
     const mapView = useRef<NaverMapViewInstance>(null);
     
-    // ÇöÀç Ç¥½ÃµÇ¾î¾ß ÇÏ´Â buoy_id¸¦ ÀúÀåÇÏ´Â »óÅÂ
+    // í˜„ì¬ í‘œì‹œë˜ì–´ì•¼ í•˜ëŠ” buoy_idë¥¼ ì €ì¥í•˜ëŠ” ìƒíƒœ
     const [showDeviceId, setShowDeviceId] = useState<string | null>(null);
     const [showUpdateLocationButton, setShowUpdateLocationButton] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState<DeviceDataType | null>(null);
@@ -43,7 +43,7 @@ const MapComponent = () => {
         const watchId = Geolocation.watchPosition(
             position => {
                 const { latitude, longitude } = position.coords;
-                // »ç¿ëÀÚ°¡ ¸¶Áö¸·À¸·Î Áöµµ¸¦ ÅÍÄ¡ÇÑ ½ÃÁ¡¿¡¼­ 3.5ÃÊ°¡ Áö³ªÁö ¾Ê¾Ò´Ù¸é À§Ä¡¸¦ ¾÷µ¥ÀÌÆ® ÇÏÁö ¾Ê´Â´Ù.
+                // ì‚¬ìš©ìê°€ ë§ˆì§€ë§‰ìœ¼ë¡œ ì§€ë„ë¥¼ í„°ì¹˜í•œ ì‹œì ì—ì„œ 3.5ì´ˆê°€ ì§€ë‚˜ì§€ ì•Šì•˜ë‹¤ë©´ ìœ„ì¹˜ë¥¼ ì—…ë°ì´íŠ¸ í•˜ì§€ ì•ŠëŠ”ë‹¤.
                 if (lastTouchTime && Date.now() - lastTouchTime < 3500) {
                     return;
                 }
@@ -116,10 +116,10 @@ const MapComponent = () => {
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 console.log("Location permission granted");
-                // ±ÇÇÑÀÌ Çã¿ëµÈ °æ¿ìÀÇ ·ÎÁ÷À» Ãß°¡ÇÕ´Ï´Ù.
+                // ê¶Œí•œì´ í—ˆìš©ëœ ê²½ìš°ì˜ ë¡œì§ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
             } else {
                 console.log("Location permission denied");
-                // ±ÇÇÑÀÌ °ÅºÎµÈ °æ¿ìÀÇ ·ÎÁ÷À» Ãß°¡ÇÕ´Ï´Ù.
+                // ê¶Œí•œì´ ê±°ë¶€ëœ ê²½ìš°ì˜ ë¡œì§ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
             }
         } catch (err) {
             console.warn(err);
@@ -127,18 +127,13 @@ const MapComponent = () => {
     };
 
     const handleDeviceDetail = () => {
-        const device = fetchedWData.find(device => device.dev_eui === showDeviceId);
-        if (device) {
-            setSelectedDevice(device);
+        if (!isModalVisible){
             setIsModalVisible(true);
-        } else {
-            console.log(`Device with ID ${showDeviceId} not found.`);
         }
     };
-    
 
     const handleOnCameraChange = (cameraChangeEvent: Region) => {
-        // »ç¿ëÀÚ°¡ Áöµµ¸¦ ÅÍÄ¡ÇÒ ¶§¸¶´Ù ÇöÀç ½Ã°£À» ÀúÀåÇÑ´Ù.
+        // ì‚¬ìš©ìê°€ ì§€ë„ë¥¼ í„°ì¹˜í•  ë•Œë§ˆë‹¤ í˜„ì¬ ì‹œê°„ì„ ì €ì¥í•œë‹¤.
         setLastTouchTime(Date.now());
         setRegion(cameraChangeEvent);
     }
@@ -160,14 +155,14 @@ const MapComponent = () => {
     
         let adjustedCoord = { ...deviceCoord };
     
-        // À§/¾Æ·¡ °æ°è È®ÀÎ
+        // ìœ„/ì•„ë˜ ê²½ê³„ í™•ì¸
         if (deviceCoord.latitude > topRight.latitude) {
             adjustedCoord.latitude = topRight.latitude;
         } else if (deviceCoord.latitude < bottomLeft.latitude) {
             adjustedCoord.latitude = bottomLeft.latitude;
         }
     
-        // ÁÂ/¿ì °æ°è È®ÀÎ
+        // ì¢Œ/ìš° ê²½ê³„ í™•ì¸
         if (deviceCoord.longitude > topRight.longitude) {
             adjustedCoord.longitude = topRight.longitude;
         } else if (deviceCoord.longitude < topLeft.longitude) {
@@ -182,7 +177,7 @@ const MapComponent = () => {
             const position = await getCurrentPosition();
             const { latitude, longitude } = position.coords;
             
-            // ¸ÊÀÇ Áß½ÉÀ» ÇöÀç À§Ä¡·Î ÀÌµ¿
+            // ë§µì˜ ì¤‘ì‹¬ì„ í˜„ì¬ ìœ„ì¹˜ë¡œ ì´ë™
             mapView.current?.animateToCoordinate({ latitude, longitude });
             
             setShowUpdateLocationButton(false)
@@ -224,10 +219,10 @@ const MapComponent = () => {
             if(!isInsideMap(deviceCoord, region?.coveringRegion)) {
                 deviceCoord = adjustDevicePosition(deviceCoord, region.coveringRegion);
             }
-            // received_atÀ» Date °´Ã¼·Î º¯È¯ (GMT +0 ±âÁØ)
+            // received_atì„ Date ê°ì²´ë¡œ ë³€í™˜ (GMT +0 ê¸°ì¤€)
             const receivedAtDate = new Date(device.received_at);
             
-            // GMT+9·Î ½Ã°£´ë¸¦ º¯È¯
+            // GMT+9ë¡œ ì‹œê°„ëŒ€ë¥¼ ë³€í™˜
             const receivedAtDateKST = new Date(receivedAtDate.getTime() + (9 * 60 * 60 * 1000));
             const currentTime = Date.now();
             const timeDifference = currentTime - receivedAtDateKST.getTime();
@@ -241,7 +236,7 @@ const MapComponent = () => {
                     width={35}
                     height={35}
                     anchor={{ x: 0.5, y: 0.5 }}
-                    onClick={() => setSelectedDevice(device)} // ¸¶Ä¿ Å¬¸¯ ÇÚµé·¯ Ãß°¡
+                    onClick={() => handleDeviceClick(device)} // ë§ˆì»¤ í´ë¦­ í•¸ë“¤ëŸ¬ ì¶”ê°€
                 >
                 <MaterialCommunityIcons
                     key={`deviceI_${i}`} 
@@ -254,22 +249,20 @@ const MapComponent = () => {
         });
     }, [fetchedWData, region, showDeviceId]);
 
-    const DeviceDetailModal = ({ visible, device, onClose }) => {
-        if (!device) return null;
+    const DeviceDetailModal = () => {
+        if (!selectedDevice) return null;
         return (
             <Modal
-                visible={visible}
                 transparent={true}
                 animationType="slide"
-                onRequestClose={onClose}
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>{device.dev_eui}</Text>
-                        <Text>Latitude: {device.parsed_string.LATITUDE}</Text>
-                        <Text>Longitude: {device.parsed_string.LONGITUDE}</Text>
-                        <Text>Received at: {device.received_at}</Text>
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                        <Text style={styles.modalTitle}>{selectedDevice.dev_eui}</Text>
+                        <Text style={styles.modalDetail}>Latitude: {selectedDevice.parsed_string.LATITUDE}</Text>
+                        <Text style={styles.modalDetail}>Longitude: {selectedDevice.parsed_string.LONGITUDE}</Text>
+                        <Text style={styles.modalDetail}>Received at: {selectedDevice.received_at}</Text>
+                        <TouchableOpacity onPress={()=>setIsModalVisible(false)} style={styles.closeButton}>
                             <Text>Close</Text>
                         </TouchableOpacity>
                     </View>
@@ -279,11 +272,13 @@ const MapComponent = () => {
     };
 
     const handleDeviceClick = (device) => {
-        // ÀÌ¹Ì Ç¥½ÃµÈ buoy_id¸¦ Å¬¸¯ÇÏ¸é ¼û±â°í, ±×·¸Áö ¾ÊÀ¸¸é Ç¥½ÃÇÕ´Ï´Ù.
+        // ì´ë¯¸ í‘œì‹œëœ buoy_idë¥¼ í´ë¦­í•˜ë©´ ìˆ¨ê¸°ê³ , ê·¸ë ‡ì§€ ì•Šìœ¼ë©´ í‘œì‹œí•©ë‹ˆë‹¤.
         if (selectedDevice === device) {
             setShowDeviceId(null);
+            setSelectedDevice(null)
         } else {
             setShowDeviceId(device.dev_eui);
+            setSelectedDevice(device)
         }
     }
 
@@ -330,7 +325,7 @@ const MapComponent = () => {
                 scaleBar={true}
                 nightMode={false}
                 zoomControl={true}
-                // logoMargin={{left: -50}} ³×ÀÌ¹ö ¸Ê Á¤Ã¥À¸·Î ¹İµå½Ã º¸¿©¾ß ÇÔ
+                // logoMargin={{left: -50}} ë„¤ì´ë²„ ë§µ ì •ì±…ìœ¼ë¡œ ë°˜ë“œì‹œ ë³´ì—¬ì•¼ í•¨
                 mapType={mapType}
                 style={{ height:"100%" }}
                 center={locationSaved ? {latitude: locationSaved.latitude, longitude:locationSaved.longitude, zoom: locationSaved.mapZoomLevel}:{latitude: 37.35882350130591, longitude: 127.10469231924353, zoom: 13}}
@@ -379,13 +374,11 @@ const MapComponent = () => {
                     </TouchableOpacity>
                 )
             }
-
-            <DeviceDetailModal
-                visible={isModalVisible} 
-                device={selectedDevice} 
-                onClose={() => setIsModalVisible(false)} 
-            />
-            
+            {
+                (isModalVisible) && (
+                    <DeviceDetailModal/>
+                )
+            }
             
             <ActionButton 
                 buttonColor={Theme.COLORS.SETINGS_BTN}>
@@ -455,7 +448,7 @@ const styles = StyleSheet.create({
         borderRadius: 3,
         borderColor: 'gray',
         borderWidth: 0.5,
-        top: 0, // ¾ÆÀÌÄÜ À§¿¡ À§Ä¡¸¦ Á¶ÀıÇÏ·Á¸é ÀÌ °ªÀ» Á¶Á¤
+        top: 0, // ì•„ì´ì½˜ ìœ„ì— ìœ„ì¹˜ë¥¼ ì¡°ì ˆí•˜ë ¤ë©´ ì´ ê°’ì„ ì¡°ì •
     },
     deviceIdText: {
         fontSize: 10,
@@ -529,16 +522,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
     },
     modalContent: {
-        width: '80%',
+        width: '90%',
         backgroundColor: 'white',
         padding: 20,
         borderRadius: 10,
         alignItems: 'center',
+        color: 'black'
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+        color: 'black'
+    },
+    modalDetail: {
+        fontSize: 18,
+        marginBottom: 10,
+        color: 'black'
     },
     closeButton: {
         marginTop: 20,

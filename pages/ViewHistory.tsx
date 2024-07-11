@@ -22,7 +22,7 @@ const ViewHistory: React.FC = () => {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(endDate);
     endOfDay.setHours(23, 59, 59, 999);
-    endOfDay.setDate(endOfDay.getDate() + 1); // Á¾·á ³¯Â¥¿¡ ÇÏ·ç Ãß°¡
+    endOfDay.setDate(endOfDay.getDate() + 1); // ì¢…ë£Œ ë‚ ì§œì— í•˜ë£¨ ì¶”ê°€
 
     try {
       const response = await axios.get('http://14.50.159.2:19999/dbcall', {

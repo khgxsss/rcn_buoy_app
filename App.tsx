@@ -57,7 +57,7 @@ const App: React.FC = () => {
     });
   }, []);
 
-  // MQTT Å¬¶óÀÌ¾ğÆ® ÃÊ±âÈ­ ¹× ¼³Á¤
+  // MQTT í´ë¼ì´ì–¸íŠ¸ ì´ˆê¸°í™” ë° ì„¤ì •
   const initializeMQTT = () => {
     init({
       size: 10000,
@@ -73,17 +73,17 @@ const App: React.FC = () => {
     if (user?.idToken) {
       initializeMQTT();
   
-      // Å¬¶óÀÌ¾ğÆ® »ı¼º ¹× ¿É¼Ç ¼³Á¤
+      // í´ë¼ì´ì–¸íŠ¸ ìƒì„± ë° ì˜µì…˜ ì„¤ì •
       const client = new Paho.MQTT.Client('ws://14.50.159.2:1884/', 'client2');
   
-      // ¿¬°á ·Î½ºÆ® ½Ã Ã³¸®
+      // ì—°ê²° ë¡œìŠ¤íŠ¸ ì‹œ ì²˜ë¦¬
       client.onConnectionLost = (error: { errorCode: number, errorMessage: string, invocationContext: string }) => {
         if (error.errorCode !== 0) {
           console.log('onConnectionLost:' + error.errorMessage);
           if (error.errorCode === 7) {
             console.log("Need Wifi or Cellular activated")
           }
-          reconnect(client);  // ¿¬°á ½ÇÆĞ ½Ã Àç¿¬°á ½Ãµµ
+          reconnect(client);  // ì—°ê²° ì‹¤íŒ¨ ì‹œ ì¬ì—°ê²° ì‹œë„
         }
       };
   
@@ -98,14 +98,14 @@ const App: React.FC = () => {
             },
             onFailure: reconnectError => {
               console.log('Reconnection failed:', reconnectError.errorMessage);
-              reconnect(client);  // Àç±ÍÀûÀ¸·Î Àç¿¬°á ½Ãµµ
+              reconnect(client);  // ì¬ê·€ì ìœ¼ë¡œ ì¬ì—°ê²° ì‹œë„
             },
             useSSL: false
           });
-        }, 2000);  // 2ÃÊ ÈÄ¿¡ Àç¿¬°á ½Ãµµ
+        }, 2000);  // 2ì´ˆ í›„ì— ì¬ì—°ê²° ì‹œë„
       };
   
-      // ¸Ş½ÃÁö ¼ö½Å ½Ã Ã³¸®
+      // ë©”ì‹œì§€ ìˆ˜ì‹  ì‹œ ì²˜ë¦¬
       client.onMessageArrived = (message) => {
         const newDeviceData = JSON.parse(message.payloadString);
         const devEui = newDeviceData.dev_eui;
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       };
   
   
-      // MQTT ¼­¹ö¿¡ ¿¬°á
+      // MQTT ì„œë²„ì— ì—°ê²°
       client.connect({
         onSuccess: () => {
           console.log('Connected');
@@ -157,7 +157,7 @@ const App: React.FC = () => {
           if (error.errorCode === 7) {
             console.log("Need Wifi or Cellular activated")
           }
-          reconnect(client);  // ¿¬°á ½ÇÆĞ ½Ã Àç¿¬°á ½Ãµµ
+          reconnect(client);  // ì—°ê²° ì‹¤íŒ¨ ì‹œ ì¬ì—°ê²° ì‹œë„
         }
       });
   
@@ -167,9 +167,9 @@ const App: React.FC = () => {
         }
       };
     }
-  }, [user]); // user °ªÀÌ º¯°æµÉ ¶§¸¸ ½ÇÇà
+  }, [user]); // user ê°’ì´ ë³€ê²½ë  ë•Œë§Œ ì‹¤í–‰
 
-  // wifi ¿Í cellular on off °¨Áö
+  // wifi ì™€ cellular on off ê°ì§€
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isInternetReachable) {
@@ -202,7 +202,7 @@ const App: React.FC = () => {
       }
     });
 
-    // ÄÄÆ÷³ÍÆ® ¾ğ¸¶¿îÆ® ½Ã ÀÌº¥Æ® ¸®½º³Ê Á¦°Å
+    // ì»´í¬ë„ŒíŠ¸ ì–¸ë§ˆìš´íŠ¸ ì‹œ ì´ë²¤íŠ¸ ë¦¬ìŠ¤ë„ˆ ì œê±°
     return () => {
         unsubscribe();
     };
@@ -210,10 +210,10 @@ const App: React.FC = () => {
 
   const handleOpenSettings = () => {
     if (Platform.OS === 'ios') {
-        // iOS ¼³Á¤ È­¸éÀ¸·Î ÀÌµ¿
+        // iOS ì„¤ì • í™”ë©´ìœ¼ë¡œ ì´ë™
         Linking.openURL('app-settings:');
     } else {
-      // ¾Èµå·ÎÀÌµå Wi-Fi ¼³Á¤ È­¸éÀ¸·Î ÀÌµ¿
+      // ì•ˆë“œë¡œì´ë“œ Wi-Fi ì„¤ì • í™”ë©´ìœ¼ë¡œ ì´ë™
       IntentLauncher.startActivity({
         action: 'android.settings.WIFI_SETTINGS',
         category: '',

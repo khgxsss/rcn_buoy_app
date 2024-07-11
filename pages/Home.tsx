@@ -9,7 +9,7 @@ import {
   Image,
   FlatList,
   Dimensions,
-  useWindowDimensions // Dimensions API ÀÓÆ÷Æ®
+  useWindowDimensions // Dimensions API ì„í¬íŠ¸
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -26,15 +26,15 @@ const Home: React.FC = () => {
   };
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
-  // useWindowDimensions ÈÅÀ» »ç¿ëÇÏ¿© È­¸é Å©±â °¡Á®¿À±â
+  // useWindowDimensions í›…ì„ ì‚¬ìš©í•˜ì—¬ í™”ë©´ í¬ê¸° ê°€ì ¸ì˜¤ê¸°
   const { width, height } = useWindowDimensions();
 
-  // È­¸é ³Êºñ°¡ ³ôÀÌº¸´Ù Å©¸é °¡·Î ¸ğµå, ¾Æ´Ï¸é ¼¼·Î ¸ğµå
+  // í™”ë©´ ë„ˆë¹„ê°€ ë†’ì´ë³´ë‹¤ í¬ë©´ ê°€ë¡œ ëª¨ë“œ, ì•„ë‹ˆë©´ ì„¸ë¡œ ëª¨ë“œ
   const numColumns = width > height ? 3 : 2;
   const flatListKey = numColumns.toString();
 
   useEffect(() => {
-    // numColumns°¡ º¯°æµÉ ¶§¸¶´Ù imageSize¸¦ ¾÷µ¥ÀÌÆ®ÇÕ´Ï´Ù.
+    // numColumnsê°€ ë³€ê²½ë  ë•Œë§ˆë‹¤ imageSizeë¥¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
     const newWidth = width / numColumns - 10 * 2;
     setImageSize({ width: newWidth, height: newWidth });
   }, [numColumns]);
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     margin: 10,
-    position: 'relative', // ÀÚ½Ä ¿ä¼Ò¿¡ absolute Æ÷Áö¼ÇÀ» »ç¿ëÇÏµµ·Ï ÇÔ
+    position: 'relative', // ìì‹ ìš”ì†Œì— absolute í¬ì§€ì…˜ì„ ì‚¬ìš©í•˜ë„ë¡ í•¨
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
@@ -83,9 +83,9 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontWeight: 'bold',
     marginBottom: 8,
-    zIndex: 1, // ÀÌ¹ÌÁö¸¦ µ¤¾î¾²µµ·Ï ¼³Á¤
-    position: 'absolute', // À§Ä¡¸¦ Àı´ëÀûÀ¸·Î ¼³Á¤
-    top: 10, // ÀÌ¹ÌÁö »ó´Ü¿¡¼­ºÎÅÍÀÇ °£°İ,
+    zIndex: 1, // ì´ë¯¸ì§€ë¥¼ ë®ì–´ì“°ë„ë¡ ì„¤ì •
+    position: 'absolute', // ìœ„ì¹˜ë¥¼ ì ˆëŒ€ì ìœ¼ë¡œ ì„¤ì •
+    top: 10, // ì´ë¯¸ì§€ ìƒë‹¨ì—ì„œë¶€í„°ì˜ ê°„ê²©,
     backgroundColor:'#f0f0f0',
     opacity: 0.7
   },
@@ -105,16 +105,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
     fontWeight: 'bold',
     position: 'absolute',
-    bottom: 10, // ÀÌ¹ÌÁö ÇÏ´Ü¿¡¼­ºÎÅÍÀÇ °£°İ
+    bottom: 10, // ì´ë¯¸ì§€ í•˜ë‹¨ì—ì„œë¶€í„°ì˜ ê°„ê²©
     fontSize: 14,
     backgroundColor:'#f0f0f0',
     opacity: 0.7
   },
   buoyImage: {
-    position: 'absolute', // ¹è°æ¿¡ ÀÌ¹ÌÁö°¡ ±ò¸®µµ·Ï ¼³Á¤
+    position: 'absolute', // ë°°ê²½ì— ì´ë¯¸ì§€ê°€ ê¹”ë¦¬ë„ë¡ ì„¤ì •
     top: 0,
     left: 0,
-    zIndex: 0, // ´Ù¸¥ ¿ä¼Òº¸´Ù µÚ¿¡ ¿Àµµ·Ï ¼³Á¤
+    zIndex: 0, // ë‹¤ë¥¸ ìš”ì†Œë³´ë‹¤ ë’¤ì— ì˜¤ë„ë¡ ì„¤ì •
   }
 });
 

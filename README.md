@@ -42,6 +42,18 @@ npm run ios
 yarn ios
 ```
 
+BUILD CONF
+
+(?? ???)
+
+mkdir -p android/app/src/main/assets
+
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+
+cd android
+./gradlew assembleDebug
+
+
 If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
 
 This is one way to run your app ??? you can also run it directly from within Android Studio and Xcode respectively.

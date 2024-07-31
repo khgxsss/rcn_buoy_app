@@ -97,6 +97,13 @@ export interface Region {
     // 콘텐츠 패딩을 포함한 지도의 뷰 전체 영역에 대한 좌표열을 반환합니다. 좌표열은 네 개의 좌표로 구성된 사각형으로 표현됩니다. 단, 반환되는 배열의 크기는 5이며, 첫 번째 원소와 마지막 원소가 동일한 지점을 가리킵니다.
     coveringRegion: [Coord, Coord, Coord, Coord, Coord]; 
 }
+
+export interface Record {
+    created_at: string;
+    parsed_string: {
+      [key: string]: string;
+    };
+  }
   
 export const MAP_TYPE = {
     BASIC: 0,

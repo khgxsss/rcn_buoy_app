@@ -1,7 +1,8 @@
 // src/features/auth/authSlice.ts
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { User } from '@react-native-google-signin/google-signin';
-import { DeviceDataType, deviceType, FetchedDataType, serverLoginInputType, locationSavedType, appDimensionType,  Region, MAP_TYPE, oauth_config } from '../constants/types';
+import { DeviceDataType, deviceType, FetchedDataType, serverLoginInputType, locationSavedType, appDimensionType,  Region, MAP_TYPE, oauth_config, Record } from '../constants/types';
+import { getSeoulDate } from '../utils/utilfuncs';
 
 interface AuthState {
   user: User | null;
@@ -20,6 +21,9 @@ interface AuthState {
   seeAllDevices: boolean;
   seeDistanceLines: boolean;
   serverLoginInput: serverLoginInputType;
+  records: Record[];
+  startDate: string;
+  endDate: string
 }
 
 const initialState: AuthState = {
@@ -63,7 +67,10 @@ const initialState: AuthState = {
     ip: '192.168.0.1',
     port: 12345,
     password: '123'
-  }
+  },
+  records: [],
+  startDate: getSeoulDate().toISOString(),
+  endDate: getSeoulDate().toISOString()
 };
 
 export const authSlice = createSlice({
@@ -114,7 +121,16 @@ export const authSlice = createSlice({
     },
     setServerLoginInput: (state, action: PayloadAction<serverLoginInputType>) => {
       state.serverLoginInput = action.payload;
-    }
+    },
+    setRecords: (state, action: PayloadAction<Record[]>) => {
+      state.records = action.payload;
+    },
+    setStartDate: (state, action: PayloadAction<string>) => {
+      state.startDate = action.payload;
+    },
+    setEndDate: (state, action: PayloadAction<string>) => {
+      state.endDate = action.payload;
+    },
   },
   // 아래 부분은 다른 파일에서 구현
 //   extraReducers: (builder) => { // async
@@ -139,7 +155,7 @@ export const {
   setUser, setActiveTab, setMapType, setFetchedWData,
   setWifiModalVisible, setMapSettingsModalVisible, setLoading, setDefaultMapZoomLevel,
   setWifiOn, setCellularOn, setAppDimension, setLocationSaved, setSeeAllDevices,
-  setSeeDistanceLines, setServerLoginInput
+  setSeeDistanceLines, setServerLoginInput, setRecords, setStartDate, setEndDate
 } = authSlice.actions;
 
 export default authSlice.reducer;

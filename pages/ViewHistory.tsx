@@ -2,28 +2,26 @@ import React, { useState } from 'react';
 import { ScrollView, Text, TextInput, Button, StyleSheet, View, Modal, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import DatePicker from 'react-native-date-picker';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { getSeoulDate } from '../utils/utilfuncs';
 import Theme from '../constants/Theme';
-
-interface Record {
-  created_at: string;
-  parsed_string: {
-    [key: string]: string | number;
-  };
-}
+import HistoryOnMap from '../components/historyOnMap';
+import { setRecords, setStartDate, setEndDate } from '../redux/stateSlice';
 
 const ViewHistory: React.FC = () => {
-  const [startDate, setStartDate] = useState<Date>(getSeoulDate());
-  const [endDate, setEndDate] = useState<Date>(getSeoulDate());
   const [deviceEui, setDeviceEui] = useState<string>('');
-  const [records, setRecords] = useState<Record[]>([]);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
   const [deviceListModalVisible, setDeviceListModalVisible] = useState<boolean>(false);
   const [deviceEuiList, setDeviceEuiList] = useState<string[]>([]);
+  const [showOnMap, setShowOnMap] = useState<boolean>(false);
 
   const user = useSelector((state: RootState) => state.auth.user);
+  const records = useSelector((state:RootState) => state.auth.records);
+  const startDate = new Date(useSelector((state: RootState) => state.auth.startDate));
+  const endDate = new Date(useSelector((state: RootState) => state.auth.endDate));
+
+  const dispatch = useDispatch();
 
   const fetchRecords = async () => {
     try {
@@ -36,7 +34,7 @@ const ViewHistory: React.FC = () => {
             end_datetime: endDate
           },
         });
-        setRecords(response.data);
+        dispatch(setRecords(response.data));
         setModalVisible(true); // Show the modal
       }else {
         console.log("check device")
@@ -65,9 +63,9 @@ const ViewHistory: React.FC = () => {
       <Text style={styles.header}>Select date and device EUI</Text>
 
       <Text style={styles.label}>Start Date:</Text>
-      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={startDate} onDateChange={setStartDate} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
+      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={startDate} onDateChange={(e)=>dispatch(setStartDate(e.toISOString()))} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
       <Text style={styles.label}>End Date:</Text>
-      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={endDate} onDateChange={setEndDate} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
+      <DatePicker style={{backgroundColor:Theme.COLORS.BLACK}} date={endDate} onDateChange={(e)=>dispatch(setEndDate(e.toISOString()))} mode="datetime" timeZoneOffsetInMinutes={0} minuteInterval={10} />
 
       <Text style={styles.label}>Device 선택</Text>
       <View style={styles.row}>
@@ -80,17 +78,33 @@ const ViewHistory: React.FC = () => {
       <Modal visible={isModalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Device Usage History</Text>
-          <FlatList style={styles.flatlist}
-            data={records}
-            keyExtractor={(item, index) => `record-${index}`}
-            renderItem={({ item }) => (
-              <View style={styles.recordRow}>
-                <Text style={styles.recordCell}>{item.created_at}</Text>
-                <Text style={styles.recordCell}>{item.parsed_string.LATITUDE}, {item.parsed_string.LONGITUDE}</Text>
-              </View>
-            )}
-          />
-          <Button title="Close" onPress={() => setModalVisible(false)} color={Theme.COLORS.LABEL}/>
+          {
+            showOnMap ? (
+              <Button title="Close" onPress={() => setShowOnMap(false)} color={Theme.COLORS.GRADIENT_START}/>
+            ):(
+              <Button title="Show on Map" onPress={() => setShowOnMap(true)} color={Theme.COLORS.GRADIENT_START}/>
+            )
+          }
+          {
+            showOnMap? (
+              <HistoryOnMap/>
+            ):(
+              <>
+                <FlatList style={styles.flatlist}
+                  data={records}
+                  keyExtractor={(item, index) => `record-${index}`}
+                  renderItem={({ item }) => (
+                    <View style={styles.recordRow}>
+                      <Text style={styles.recordCell}>{item.created_at}</Text>
+                      <Text style={styles.recordCell}>{item.parsed_string.LATITUDE}, {item.parsed_string.LONGITUDE}</Text>
+                    </View>
+                  )}
+                />
+                <Button title="Close" onPress={() => setModalVisible(false)} color={Theme.COLORS.LABEL}/>
+              </>
+            )
+          }
+          
         </View>
       </Modal>
 

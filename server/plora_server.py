@@ -3,6 +3,7 @@ import asyncio
 import aiomysql
 from datetime import datetime
 from paho.mqtt.client import Client
+import socket
 
 # MariaDB 설정
 DB_HOST = '14.50.159.2'
@@ -14,15 +15,21 @@ DB_NAME = 'BUOY_PLORA'
 # MQTT 설정
 MQTT_BROKER = 'au1.cloud.thethings.network'
 MQTT_PORT = 1883
-MQTT_TOPIC = 'v3/rcnapp1@ttn/devices/+/up'
-MQTT_USER = 'rcnapp1@ttn'
-MQTT_PASSWORD = 'NNSXS.YCU7AAWPOCH27N6UEVVRZSF33IVIDMQRB6L2AHI.THLGQXBMXSESTGLXICJZQQGWJRMZAEARP7VQPTZI7SEYJHC7GLXA'
+MQTT_TOPIC = 'v3/rcnapp11@ttn/devices/+/up'
+
+# rcndev 계정
+MQTT_USER = 'rcnapp11@ttn'
+MQTT_PASSWORD = 'NNSXS.KKSXXD5PR2TX7ZBHO7GRUGNHJC3JDFPEUQKSGTQ.ZVY6MASYDO7G46X44AZRH24CSVDG73X4FPEPBEPDSLNYO4VR7FFQ'
 
 # 다른 서버의 MQTT 설정 (Publish 전용)
 OTHER_MQTT_BROKER = '14.50.159.2'
 OTHER_MQTT_PORT = 1883
 # OTHER_MQTT_USER = 'other_user'
 # OTHER_MQTT_PASSWORD = 'other_password'
+
+# 대상 socket IP와 포트 설정
+TARGET_IP = '115.71.11.205'
+TARGET_PORT = 9988
 
 device_data = {}
 
@@ -73,6 +80,54 @@ def hex_to_decimal(hex_str):
         decimal_number = decimal_number.zfill(original_length)
     return decimal_number
 
+def convert_lat(number_str):
+    """
+    8자리 숫자 문자열을 받아, ab를 정수 자리로, 
+    cd.efgh를 소수로 변환하여 새로운 문자열로 된 숫자를 반환합니다.
+    """
+    if len(number_str) != 8 or not number_str.isdigit():
+        raise ValueError("입력은 8자리 숫자 문자열이어야 합니다.")
+    
+    # ab를 정수 부분으로 추출
+    integer_part = number_str[:2]
+    
+    # cd.efgh를 소수 부분으로 변환
+    decimal_str = number_str[2:]
+    decimal_part = int(decimal_str[:2]) + int(decimal_str[2:]) / 10000  # cd.efgh 형식으로 만듦
+    decimal_part = decimal_part / 60  # 소수 부분을 60으로 나눔
+    
+    # 소수 부분을 문자열로 변환하고, "0."을 제거하여 결과 생성
+    decimal_part_str = f"{decimal_part:.8f}".split('.')[1]
+    
+    # 최종 GPS 좌표 문자열 생성
+    result = f"{integer_part}.{decimal_part_str}"
+    
+    return result
+
+def convert_long(number_str):
+    """
+    9자리 숫자 문자열을 받아, abc를 정수 자리로,
+    de.fghi를 소수로 변환하여 새로운 문자열로 된 숫자를 반환합니다.
+    """
+    if len(number_str) != 9 or not number_str.isdigit():
+        raise ValueError("입력은 9자리 숫자 문자열이어야 합니다.")
+    
+    # abc를 정수 부분으로 추출
+    integer_part = number_str[:3]
+    
+    # de.fghi를 소수 부분으로 변환
+    decimal_de = int(number_str[3:5])
+    decimal_fghi = int(number_str[5:]) / 10000  # fghi 부분을 소수로 변환
+    decimal_part = (decimal_de + decimal_fghi) / 60  # 소수 부분을 60으로 나눔
+    
+    # 소수 부분을 문자열로 변환하고, "0."을 제거하여 결과 생성
+    decimal_part_str = f"{decimal_part:.8f}".split('.')[1]
+    
+    # 최종 GPS 좌표 문자열 생성
+    result = f"{integer_part}.{decimal_part_str}"
+    
+    return result
+
 def insert_dot_at_second_position(s):
     return s[:-6] + '.' + s[-6:]
 
@@ -80,7 +135,8 @@ def parse_hexstring(hexstring):
     data = {}
     data['DATA_LENGTH'] = len(hexstring)
     data['SOF'] = hexstring[0:2]
-    data['MSG_ID'] = hexstring[2:4]
+    # data['MSG_ID'] = hexstring[2:4]
+    data['MSG_ID'] = 82
     data['Sequence'] = hexstring[6:8] + hexstring[4:6]
     data['PAYLOAD_LENGTH'] = hexstring[8:10]
     data['BUOY_ID'] = hexstring[24:26] + hexstring[22:24] + hexstring[20:22] + hexstring[18:20] + hexstring[16:18] + hexstring[14:16] + hexstring[12:14] + hexstring[10:12]
@@ -107,9 +163,12 @@ def parse_hexstring(hexstring):
     data['LONGITUDE_CONDITION'] = data['GPS_STATUS'][2]
     data['GPS_MANUFACTURER'] = data['GPS_STATUS'][3:6]
     data['PRELIMINARY_VALUE'] = data['GPS_STATUS'][6:8]
-    data['LATITUDE'] = insert_dot_at_second_position(str(int(hex_to_decimal(hexstring[48:50] + hexstring[46:48]))//2) + hex_to_decimal(hexstring[44:46] + hexstring[42:44]))
-    data['LONGITUDE'] = insert_dot_at_second_position(str(int(hex_to_decimal(hexstring[56:58] + hexstring[54:56]))//2) + hex_to_decimal(hexstring[52:54] + hexstring[50:52]))
-
+    if hexstring[0:2] == '99':
+        data['LATITUDE'] = insert_dot_at_second_position(str(int(hex_to_decimal(hexstring[48:50] + hexstring[46:48]))//2) + hex_to_decimal(hexstring[44:46] + hexstring[42:44]))
+        data['LONGITUDE'] = insert_dot_at_second_position(str(int(hex_to_decimal(hexstring[56:58] + hexstring[54:56]))//2) + hex_to_decimal(hexstring[52:54] + hexstring[50:52]))
+    else:
+        data['LATITUDE'] = convert_lat(str(int(hex_to_decimal(hexstring[48:50] + hexstring[46:48]))//2) + hex_to_decimal(hexstring[44:46] + hexstring[42:44]))
+        data['LONGITUDE'] = convert_long(str(int(hex_to_decimal(hexstring[56:58] + hexstring[54:56]))//2) + hex_to_decimal(hexstring[52:54] + hexstring[50:52]))
     return data
 
 def on_connect(client, userdata, flags, rc):
@@ -124,10 +183,17 @@ def on_message(client, userdata, msg):
         # 'Z' 문자를 제거하고 밀리초 부분을 잘라내기
         received_at = received_at.split('.')[0]
         received_at = datetime.strptime(received_at, '%Y-%m-%dT%H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+        # 기존 hexString 값을 가져옵니다.
+        hex_string = uplink_message.get("decoded_payload", {}).get("hexString", "")
+        new_hex = hex_string  # hex_string이 너무 짧으면 그대로 사용
+        # hexString의 [2:4] 부분을 '82'로 대체합니다.
+        if len(hex_string) >= 4:
+            new_hex = hex_string[:2] + '82' + hex_string[4:]
+            
         data = {
             "received_at": received_at,
             "frequency": uplink_message.get("settings", {}).get("frequency"),
-            "hexString": uplink_message.get("decoded_payload", {}).get("hexString"),
+            "hexString": new_hex,
             "dev_eui": payload.get("end_device_ids", {}).get("dev_eui"),
             "dev_addr": payload.get("end_device_ids", {}).get("dev_addr"),
             "application_id": payload.get("end_device_ids", {}).get("application_ids", {}).get("application_id"),
@@ -149,15 +215,21 @@ async def update_device_data(dev_eui, data):
             device_data[owner_uid] = data
             topic = f"v3/rcnapp1@ttn/devices/{owner_uid}/up"
             other_mqtt_client.publish(topic, json.dumps(data))
-            print('published')
+            # print('published')
+            send_data(data["hexString"])
         except Exception as err:
             print(err)
 
-async def publish_device_data():
-    while True:
-        if device_data:
-            other_mqtt_client.publish('your/topic/for/devices', json.dumps(device_data))
-        await asyncio.sleep(10)  # 10초마다 데이터 전송
+def send_data(data):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            # 서버에 연결
+            s.connect((TARGET_IP, TARGET_PORT))
+            # 데이터를 바이너리로 인코딩 후 전송
+            s.sendall(bytes.fromhex(data))
+            # print(f"Fishingear Sent: {data}")
+    except Exception as e:
+        print(f"Failed to send data: {e}")
 
 async def main():
     global loop

@@ -111,7 +111,7 @@ dependencies {
     implementation project(':react-native-vector-icons')
 
     // naver map SDK
-    implementation 'com.naver.maps:map-sdk:3.17.0'
+    implementation 'com.naver.maps:map-sdk:3.19.1'
     // Import the Firebase BoMa
     implementation platform('com.google.firebase:firebase-bom:33.1.1')
     implementation 'com.google.firebase:firebase-analytics'

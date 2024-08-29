@@ -226,7 +226,7 @@ const MapComponent = () => {
             const receivedAtDateKST = new Date(receivedAtDate.getTime() + (9 * 60 * 60 * 1000));
             const currentTime = Date.now();
             const timeDifference = currentTime - receivedAtDateKST.getTime();
-            const deviceOn = timeDifference < 120000;
+            const deviceOn = timeDifference < 360000;
             return (
                 <Marker 
                     key={`deviceM_${i}`} 
@@ -322,6 +322,8 @@ const MapComponent = () => {
                 scaleBar={true}
                 nightMode={false}
                 zoomControl={true}
+                rotateGesturesEnabled={false}
+                tiltGesturesEnabled={false}
                 // logoMargin={{left: -50}} 네이버 맵 정책으로 반드시 보여야 함
                 mapType={mapType}
                 style={{ height:"100%" }}

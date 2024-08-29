@@ -192,23 +192,24 @@ while True:
 
         # 10초마다 latest_gps_data 출력
         if current_time - last_print_time >= 10:
-            if latest_gps_data.latitude:
-                sequence_num = sequence_num+1
-                ship_id = 901
-                date_time = datetime.datetime.utcnow() + datetime.timedelta(hours=0)
-                (latitude_msb,latitude_lsb) = latest_gps_data.lat_custom
-                (longitude_msb, longitude_lsb) = latest_gps_data.lon_custom
-                # print(latitude_msb,latitude_lsb,longitude_msb,longitude_lsb)
-                speed = latest_gps_data.speed
-                course = 0
-                # course = 0 if latest_gps_data.course == None else latest_gps_data.course
-                gps_status = 0
-                lat_dir = 0 if latitude_msb>=0 else 1 # 북(N)
-                lon_dir = 0 if longitude_msb>=0 else 1 # 동(E)
-                decimal_places = 4  # 소수점 자리수(ascen)
-                packet_hex = encode_gps_data(sequence_num, ship_id, date_time, latitude_msb, latitude_lsb, longitude_msb, longitude_lsb, speed, course, gps_status, lat_dir, lon_dir, decimal_places)
-                # print(f"Latest GPS Data: {packet_hex}")
-                send_data(packet_hex)
+            if latest_gps_data:
+                if latest_gps_data.latitude:
+                    sequence_num = sequence_num+1
+                    ship_id = 901
+                    date_time = datetime.datetime.utcnow() + datetime.timedelta(hours=0)
+                    (latitude_msb,latitude_lsb) = latest_gps_data.lat_custom
+                    (longitude_msb, longitude_lsb) = latest_gps_data.lon_custom
+                    # print(latitude_msb,latitude_lsb,longitude_msb,longitude_lsb)
+                    speed = latest_gps_data.speed
+                    course = 0
+                    # course = 0 if latest_gps_data.course == None else latest_gps_data.course
+                    gps_status = 0
+                    lat_dir = 0 if latitude_msb>=0 else 1 # 북(N)
+                    lon_dir = 0 if longitude_msb>=0 else 1 # 동(E)
+                    decimal_places = 4  # 소수점 자리수(ascen)
+                    packet_hex = encode_gps_data(sequence_num, ship_id, date_time, latitude_msb, latitude_lsb, longitude_msb, longitude_lsb, speed, course, gps_status, lat_dir, lon_dir, decimal_places)
+                    # print(f"Latest GPS Data: {packet_hex}")
+                    send_data(packet_hex)
             last_print_time = current_time
 
     except KeyboardInterrupt:
